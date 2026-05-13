@@ -1,0 +1,14 @@
+# Blender 4.3.2 MTL File: 'nailong.blend'
+# www.blender.org
+
+newmtl mat_17
+Kd 0.900000 0.900000 0.900000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 3
+Pr 0.284096
+Pm 0.405609
+
+map_Kd ../textures/nai.tga

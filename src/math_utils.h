@@ -165,6 +165,39 @@ struct Mat4 {
         return r;
     }
 
+    Mat4 normal_matrix() const {
+        // 提取 3x3 子矩阵
+        float inv[3][3];
+        float a00 = m[0][0], a01 = m[1][0], a02 = m[2][0];
+        float a10 = m[0][1], a11 = m[1][1], a12 = m[2][1];
+        float a20 = m[0][2], a21 = m[1][2], a22 = m[2][2];
+        
+        // 计算行列式
+        float det = a00*(a11*a22 - a12*a21) 
+                - a01*(a10*a22 - a12*a20)
+                + a02*(a10*a21 - a11*a20);
+        
+        if (det == 0) return identity();
+        float inv_det = 1.0f / det;
+        
+        // 计算伴随矩阵并转置（逆的转置）
+        inv[0][0] = (a11*a22 - a12*a21) * inv_det;
+        inv[0][1] = -(a10*a22 - a12*a20) * inv_det;
+        inv[0][2] = (a10*a21 - a11*a20) * inv_det;
+        inv[1][0] = -(a01*a22 - a02*a21) * inv_det;
+        inv[1][1] = (a00*a22 - a02*a20) * inv_det;
+        inv[1][2] = -(a00*a21 - a01*a20) * inv_det;
+        inv[2][0] = (a01*a12 - a02*a11) * inv_det;
+        inv[2][1] = -(a00*a12 - a02*a10) * inv_det;
+        inv[2][2] = (a00*a11 - a01*a10) * inv_det;
+        
+        Mat4 r = identity();
+        for(int i=0;i<3;i++)
+            for(int j=0;j<3;j++)
+                r.m[i][j] = inv[j][i];  // 已经是逆的转置
+        return r;
+    }
+
     // normal matrix = transpose of inverse of upper-left 3x3
     Mat4 transpose3x3() const {
         Mat4 r = identity();

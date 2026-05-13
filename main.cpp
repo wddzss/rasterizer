@@ -110,7 +110,7 @@ static void render_scene(Framebuffer& fb,
                          float yaw_deg,     // camera orbit angle
                          const std::string& obj_path)
 {
-    fb.clear(Color(25, 25, 40));  // dark blue background
+    fb.clear(Color(20, 20, 35)); 
 
     Rasterizer rast(fb);
 
@@ -118,14 +118,88 @@ static void render_scene(Framebuffer& fb,
     float yaw = yaw_deg * 3.14159265f / 180.f;
     float cam_r = 5.5f, cam_h = 2.5f;
     Vec3 cam_pos = { cam_r*std::sin(yaw), cam_h, cam_r*std::cos(yaw) };
-    Vec3 cam_target = {0, 0.3f, 0};
+    Vec3 cam_target = {0, 0.5f, 0};
 
     // ── Lights (多光源) ──
     std::vector<Light> lights = {
-        { {3, 5,  4}, {1.0f, 0.95f, 0.9f}, 20.f },  // main warm white
-        { {-4, 3, -3}, {0.3f, 0.5f, 1.0f}, 8.f  },  // fill cool blue
-        { {0, -2, 2}, {0.8f, 0.2f, 0.2f}, 5.f   },  // rim red
+        { {4, 6,  5}, {1.0f, 0.95f, 0.9f}, 1.5f },
+        { {-3, 4, -4}, {0.4f, 0.6f, 1.0f}, 0.8f },
+        { {0, 1, 3}, {0.9f, 0.5f, 0.3f}, 0.5f },
     };
+
+    // 加载材质纹理的静态缓存
+    static std::unordered_map<std::string, Texture> tex_cache;
+
+        if(!obj_path.empty()) {
+        Mesh mesh = load_obj(obj_path);
+        if(mesh.triangles.empty()) mesh = make_sphere(48,48,1.f);
+        
+        // 按材质分组绘制
+        std::vector<int> mat_ids;
+        for(const auto& tri : mesh.triangles) {
+            if(tri.material_id >= 0 && 
+               std::find(mat_ids.begin(), mat_ids.end(), tri.material_id) == mat_ids.end()) {
+                mat_ids.push_back(tri.material_id);
+            }
+        }
+        
+        // 如果没有材质，添加一个默认的
+        if(mat_ids.empty()) mat_ids.push_back(-1);
+        
+        for(int mat_id : mat_ids) {
+            Material mat;
+            
+            if(mat_id >= 0 && mat_id < (int)mesh.materials.size()) {
+                const auto& mtl = mesh.materials[mat_id];
+                mat.ambient   = mtl.ambient;
+                mat.diffuse   = mtl.diffuse;
+                mat.specular  = mtl.specular;
+                mat.shininess = mtl.shininess;
+                
+                // 加载漫反射纹理
+                if(!mtl.diffuse_map.empty()) {
+                    std::string tex_path = obj_path.substr(0, obj_path.find_last_of("/\\") + 1) + mtl.diffuse_map;
+                    auto it = tex_cache.find(tex_path);
+                    if(it != tex_cache.end()) {
+                        mat.diffuse_tex = &it->second;
+                    } else {
+                        Texture& tex = tex_cache[tex_path];
+                        if(tex.load_tga(tex_path)) {
+                            mat.diffuse_tex = &tex;
+                            std::cout << "Loaded texture: " << tex_path << "\n";
+                        }
+                    }
+                }
+            } else {
+                // 默认材质
+                mat.ambient   = {0.15f, 0.15f, 0.15f};
+                mat.diffuse   = {0.8f, 0.7f, 0.6f};
+                mat.specular  = {0.5f, 0.5f, 0.5f};
+                mat.shininess = 32.f;
+            }
+            
+            // 收集该材质的三角形
+            std::vector<Triangle> mat_tris;
+            for(const auto& tri : mesh.triangles) {
+                if(tri.material_id == mat_id) {
+                    mat_tris.push_back(tri);
+                }
+            }
+            
+            if(mat_tris.empty()) continue;
+            
+            Mesh sub_mesh;
+            sub_mesh.triangles = mat_tris;
+            sub_mesh.name = mesh.name;
+            
+            Mat4 model = Mat4::rotateY(yaw * 0.2f) * Mat4::translate(0,0.5f,0);
+            auto uni = make_uniforms(fb.width,fb.height,cam_pos,cam_target,
+                                     model, mat, lights);
+            rast.draw_mesh(sub_mesh, uni);
+        }
+    }
+
+    
 
     // ─────────────────────────────────────────
     //  Object 1: OBJ model (or sphere fallback)
