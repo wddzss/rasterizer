@@ -201,44 +201,44 @@ static void render_scene(Framebuffer& fb,
 
     
 
-    // ─────────────────────────────────────────
-    //  Object 1: OBJ model (or sphere fallback)
-    // ─────────────────────────────────────────
-    {
-        Mesh mesh;
-        static Texture diff_tex, spec_tex;
-        static bool tex_loaded = false;
+    // // ─────────────────────────────────────────
+    // //  Object 1: OBJ model (or sphere fallback)
+    // // ─────────────────────────────────────────
+    // {
+    //     Mesh mesh;
+    //     static Texture diff_tex, spec_tex;
+    //     static bool tex_loaded = false;
 
-        if(!tex_loaded) {
-            // Try to load textures; fall back to procedural
-            if(!diff_tex.load_tga("textures/diffuse.tga"))
-                diff_tex.make_checkerboard(512,512,{0.9f,0.7f,0.4f},{0.3f,0.2f,0.1f},8);
-            if(!spec_tex.load_tga("textures/specular.tga"))
-                spec_tex.make_checkerboard(512,512,{0.9f,0.9f,0.9f},{0.1f,0.1f,0.1f},8);
-            tex_loaded=true;
-        }
+    //     if(!tex_loaded) {
+    //         // Try to load textures; fall back to procedural
+    //         if(!diff_tex.load_tga("textures/diffuse.tga"))
+    //             diff_tex.make_checkerboard(512,512,{0.9f,0.7f,0.4f},{0.3f,0.2f,0.1f},8);
+    //         if(!spec_tex.load_tga("textures/specular.tga"))
+    //             spec_tex.make_checkerboard(512,512,{0.9f,0.9f,0.9f},{0.1f,0.1f,0.1f},8);
+    //         tex_loaded=true;
+    //     }
 
-        if(!obj_path.empty()) {
-            mesh = load_obj(obj_path);
-            if(mesh.triangles.empty()) mesh = make_sphere(48,48,1.f);
-        } else {
-            mesh = make_sphere(48,48,1.f);
-        }
+    //     if(!obj_path.empty()) {
+    //         mesh = load_obj(obj_path);
+    //         if(mesh.triangles.empty()) mesh = make_sphere(48,48,1.f);
+    //     } else {
+    //         mesh = make_sphere(48,48,1.f);
+    //     }
 
-        Material mat;
-        mat.ambient   = {0.05f,0.05f,0.05f};
-        mat.diffuse   = {0.8f,0.8f,0.8f};
-        mat.specular  = {0.6f,0.6f,0.6f};
-        mat.shininess = 64.f;
-        mat.diffuse_tex  = &diff_tex;
-        mat.specular_tex = &spec_tex;
+    //     Material mat;
+    //     mat.ambient   = {0.05f,0.05f,0.05f};
+    //     mat.diffuse   = {0.8f,0.8f,0.8f};
+    //     mat.specular  = {0.6f,0.6f,0.6f};
+    //     mat.shininess = 64.f;
+    //     mat.diffuse_tex  = &diff_tex;
+    //     mat.specular_tex = &spec_tex;
 
-        // Slowly rotate the model
-        Mat4 model = Mat4::rotateY(yaw * 0.3f) * Mat4::translate(0,0.8f,0);
-        auto uni = make_uniforms(fb.width,fb.height,cam_pos,cam_target,
-                                 model,mat,lights);
-        rast.draw_mesh(mesh, uni);
-    }
+    //     // Slowly rotate the model
+    //     Mat4 model = Mat4::rotateY(yaw * 0.3f) * Mat4::translate(0,0.8f,0);
+    //     auto uni = make_uniforms(fb.width,fb.height,cam_pos,cam_target,
+    //                              model,mat,lights);
+    //     rast.draw_mesh(mesh, uni);
+    // }
 
 
     if(obj_path.empty()){
